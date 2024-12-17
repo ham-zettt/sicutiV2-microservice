@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mahasiswa:
+    build: ./pengajuan_service
+    container_name: pengajuan_service
+    ports:
+      - "5001:5000" 
+    depends_on:
+      - db
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    volumes:
+      - ./pengajuan_service:/app
+
+  admin:
+    build: ./validasi_service
+    container_name: validasi_service
+    ports:
+      - "5002:5000"
+    depends_on:
+      - db
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+    volumes:
+      - ./validasi_service:/app
+
+  db:
+    image: mysql:5.7
+    container_name: mysql_db
+    environment:
+      MYSQL_DATABASE: sicuti
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3309:3306"
+
+volumes:
+  db-data:

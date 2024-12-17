@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Pengajuan Cuti Mahasiswa</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Daftar Pengajuan Cuti Mahasiswa</h1>
+
+        <!-- Tabel untuk menampilkan data pengajuan cuti -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nama Mahasiswa</th>
+                    <th>Alasan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in data %}
+                    <tr>
+                        <td>{{ req.id }}</td>
+                        <td>{{ req.student_name }}</td>
+                        <td>{{ req.reason }}</td>
+                        <td>
+                            {% if req.status == Pending %}
+                                <form action="/update_status/{{ req.id }}" method="POST">
+                                    <select name="status" class="form-control">
+                                        <option value="1" {% if req.status == 1 %}selected{% endif %}>Setujui</option>
+                                        <option value="0" {% if req.status == 0 %}selected{% endif %}>Tolak</option>
+                                    </select>
+                                </form>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if req.status == Pending %}
+                                <!-- <button type="submit" form="update-status-{{ req.id }}" class="btn btn-primary">Kirim</button> -->
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">Tidak ada data pengajuan cuti</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
