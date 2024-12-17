@@ -3,7 +3,6 @@ from models import db, LeaveRequest
 
 app = Flask(__name__)
 
-# Konfigurasi database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:password@db/sicuti'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

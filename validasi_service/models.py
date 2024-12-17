@@ -9,7 +9,8 @@ class EnumStatus(enum.Enum):
     Pending = 2
 
 class LeaveRequest(db.Model):
+    __tablename__ = 'transaksi'
     id = db.Column(db.Integer, primary_key=True)
-    student_name = db.Column(db.String(100), nullable=False)
-    reason = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.Enum(EnumStatus), default=EnumStatus.Pending, nullable=False)
+    nama = db.Column(db.String(100), nullable=False)
+    alasan = db.Column(db.String(255), nullable=False)
+    status = db.Column(db.Enum(EnumStatus), nullable=False)

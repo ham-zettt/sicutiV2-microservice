@@ -25,22 +25,13 @@
                 {% for req in data %}
                     <tr>
                         <td>{{ req.id }}</td>
-                        <td>{{ req.student_name }}</td>
-                        <td>{{ req.reason }}</td>
+                        <td>{{ req.nama }}</td>
+                        <td>{{ req.alasan }}</td>
                         <td>
-                            {% if req.status == Pending %}
-                                <form action="/update_status/{{ req.id }}" method="POST">
-                                    <select name="status" class="form-control">
-                                        <option value="1" {% if req.status == 1 %}selected{% endif %}>Setujui</option>
-                                        <option value="0" {% if req.status == 0 %}selected{% endif %}>Tolak</option>
-                                    </select>
-                                </form>
-                            {% endif %}
+                            {{ req.status.name }}
                         </td>
                         <td>
-                            {% if req.status == Pending %}
-                                <!-- <button type="submit" form="update-status-{{ req.id }}" class="btn btn-primary">Kirim</button> -->
-                            {% endif %}
+                           
                         </td>
                     </tr>
                 {% else %}

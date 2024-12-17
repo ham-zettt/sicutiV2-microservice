@@ -31,6 +31,7 @@ services:
     image: mysql:5.7
     container_name: mysql_db
     environment:
+      MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: sicuti
     volumes:
       - db-data:/var/lib/mysql

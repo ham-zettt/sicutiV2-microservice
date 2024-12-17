@@ -27,7 +27,7 @@ def apply():
     nama = request.form.get('nama')
     alasan = request.form.get('alasan')
 
-    pengajuan = PengajuanCuti(nama=nama, reason=reason)
+    pengajuan = PengajuanCuti(nama=nama, alasan=alasan)
     db.session.add(pengajuan)
     db.session.commit()
 
