@@ -8,9 +8,11 @@ services:
       - "5001:5000" 
     depends_on:
       - db
+      - redis  # Menambahkan dependensi pada Redis
     environment:
       - FLASK_APP=app.py
       - FLASK_ENV=development
+      - REDIS_HOST=redis  # Variabel lingkungan untuk menghubungkan ke Redis
     volumes:
       - ./pengajuan_service:/app
 
@@ -21,9 +23,11 @@ services:
       - "5002:5000"
     depends_on:
       - db
+      - redis  # Menambahkan dependensi pada Redis
     environment:
       - FLASK_APP=app.py
       - FLASK_ENV=development
+      - REDIS_HOST=redis  # Variabel lingkungan untuk menghubungkan ke Redis
     volumes:
       - ./validasi_service:/app
 
@@ -38,5 +42,14 @@ services:
     ports:
       - "3309:3306"
 
+  redis:
+    image: redis:alpine 
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data  
+
 volumes:
   db-data:
+  redis-data:
