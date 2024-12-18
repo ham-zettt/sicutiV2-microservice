@@ -10,7 +10,6 @@
     <div class="container">
         <h1 class="my-4">Daftar Pengajuan Cuti Mahasiswa</h1>
 
-        <!-- Tabel untuk menampilkan data pengajuan cuti -->
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -28,22 +27,56 @@
                         <td>{{ req.nama }}</td>
                         <td>{{ req.alasan }}</td>
                         <td>
-                            {{ req.status.name }}
+                            <div class="p-2 text-center {% if req.status.name == 'Disetujui' %}bg-success{% elif req.status.name == 'Ditolak' %}bg-danger{% else %}bg-warning{% endif %} rounded-lg" style="color: white;">
+                                {{ req.status.name }}
+                            </div>                            
                         </td>
-                        <td>
-                           
+                        <td class="d-flex">
+                            {% if req.status.name == 'Pending' %}
+                                <button class="btn btn-primary mr-3" data-action="approve" data-id="{{ req.id }}">Approve</button>
+                                <button class="btn btn-danger" data-action="reject" data-id="{{ req.id }}">Tolak</button>
+                            {% endif %}
                         </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center">Tidak ada data pengajuan cuti</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- Bootstrap JS (optional) -->
+    <script>
+        const buttons = document.querySelectorAll("button[data-action]");
+
+        buttons.forEach(button => {
+            button.addEventListener("click", function(event) {
+                event.preventDefault();
+                const leaveRequestId = this.getAttribute("data-id");
+                const action = this.getAttribute("data-action");
+
+                const data = {
+                    id: leaveRequestId,
+                    action: action
+                };
+
+                fetch("/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(data) 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Terjadi kesalahan.");
+                });
+            });
+        });
+    </script>
+
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>

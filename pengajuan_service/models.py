@@ -15,9 +15,9 @@ class PengajuanCuti(db.Model):
     alasan = db.Column(db.String(255), nullable=False)
     status = db.Column(db.Enum(EnumStatus), default=EnumStatus.Pending, nullable=False)
 
-    def __init__(self, nama, alasan, status=EnumStatus.Pending):
-        self.nama = nama
-        self.alasan = alasan
-        self.status = status
+    # def __init__(self, nama, alasan, status=EnumStatus.Pending):
+    #     self.nama = nama
+    #     self.alasan = alasan
+    #     self.status = status
 
 # docker exec -it mysql_db bash
