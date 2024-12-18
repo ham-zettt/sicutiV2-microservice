@@ -1,109 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Pengajuan Cuti Mahasiswa</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1 class="my-4">Daftar Pengajuan Cuti Mahasiswa</h1>
 
-        <div id="systemStatus" class="mb-4">
+<body class="bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white py-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-semibold">Sistem Pengajuan Cuti</h1>
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <h2 class="text-2xl font-semibold mb-6">Daftar Pengajuan Cuti Mahasiswa</h2>
+
+        <!-- Status Sistem Pengajuan -->
+        <div id="systemStatus" class="mb-6">
             <strong>Status Sistem Pengajuan: </strong>
             {% if redis_status == 'active' %}
-            <span id="statusText" class="badge badge-success">
+            <span id="statusText" class="badge bg-green-500 text-white px-3 py-1 rounded-full">
                 Aktif
             </span>
             {% else %}
-            <span id="statusText" class="badge badge-danger">
+            <span id="statusText" class="badge bg-red-500 text-white px-3 py-1 rounded-full">
                 Tidak Aktif
             </span>
             {% endif %}
         </div>
 
         <!-- Tombol Open/Close untuk Sistem Pengajuan -->
-        <button id="openSystem" class="btn btn-success mb-4">
-            Buka Pengajuan
-        </button>
-        <button id="closeSystem" class="btn btn-danger mb-4">
-            Tutup Pengajuan
-        </button>
-        <!-- <button id="closeSystem" class="btn btn-danger mb-4" {% if redis_status == 'inactive' %}disabled{% endif %}>
-            Tutup Pengajuan
-        </button> -->
-        
+        <div class="space-x-4 mb-6">
+            <button id="openSystem" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition">
+                Buka Pengajuan
+            </button>
+            <button id="closeSystem" class="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
+                Tutup Pengajuan
+            </button>
+        </div>
 
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nama Mahasiswa</th>
-                    <th>Alasan</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in data %}
-                    <tr>
-                        <td>{{ req.id }}</td>
-                        <td>{{ req.nama }}</td>
-                        <td>{{ req.alasan }}</td>
-                        <td>
-                            <div class="p-2 text-center {% if req.status.name == 'Disetujui' %}bg-success{% elif req.status.name == 'Ditolak' %}bg-danger{% elif req.status.name == 'Closed' %}bg-dark{% else %}bg-warning{% endif %} rounded-lg" style="color: white;">
-                                {{ req.status.name }}
-                            </div>                            
+        <!-- Tabel Daftar Pengajuan Cuti -->
+        <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+            <table class="min-w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-200 text-gray-700">
+                        <th class="px-4 py-2">ID</th>
+                        <th class="px-4 py-2">Nama Mahasiswa</th>
+                        <th class="px-4 py-2">Alasan</th>
+                        <th class="px-4 py-2">Status</th>
+                        <th class="px-4 py-2">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in data %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-2">{{ req.id }}</td>
+                        <td class="px-4 py-2">{{ req.nama }}</td>
+                        <td class="px-4 py-2">{{ req.alasan }}</td>
+                        <td class="px-4 py-2">
+                            <div class="p-2 text-center {% if req.status == 'Disetujui' %}bg-green-500{% elif req.status == 'Ditolak' %}bg-red-500{% elif req.status == 'Closed' %}bg-gray-600{% else %}bg-yellow-500{% endif %} text-white rounded-lg">
+                                {{ req.status }}
+                            </div>
                         </td>
-                        <td class="d-flex">
-                            {% if req.status.name == 'Pending' %}
-                                <button class="btn btn-primary mr-3" data-action="approve" data-id="{{ req.id }}">Approve</button>
-                                <button class="btn btn-danger" data-action="reject" data-id="{{ req.id }}">Tolak</button>
+                        <td class="px-4 py-2">
+                            {% if req.status == 'Pending' %}
+                            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition mr-3" data-action="approve" data-id="{{ req.id }}">
+                                Approve
+                            </button>
+                            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" data-action="reject" data-id="{{ req.id }}">
+                                Tolak
+                            </button>
                             {% endif %}
                         </td>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        document.getElementById('openSystem').addEventListener('click', function() {
+        // Fungsi Logout
+        function logout() {
+            const response = fetch("http://localhost:5001//logout", {
+                method: "POST",
+            });
+            response.then((res) => {
+                if (res.ok) {
+                    document.cookie =
+                        "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
+                    window.location.href = "http://localhost:5003/"; // Redirect ke login
+                } else {
+                    alert("Failed to logout.");
+                }
+            });
+        }
+
+        // Fungsi untuk mengirim permintaan buka/tutup sistem pengajuan
+        document.getElementById('openSystem').addEventListener('click', function () {
             sendToggleRequest('open');
-            console.log('open');
         });
 
-        document.getElementById('closeSystem').addEventListener('click', function() {
-            sendToggleRequest('close'); 
-            console.log('close');
+        document.getElementById('closeSystem').addEventListener('click', function () {
+            sendToggleRequest('close');
         });
 
-        // // Event Listener untuk Tombol Open/Close Sistem Pengajuan
-        // document.getElementById("toggleSystem").addEventListener("click", function() {
-        //     const isOpen = confirm("Apakah Anda yakin ingin menutup/membuka sistem pengajuan cuti?");
-        //     const action = isOpen ? "open" : "close";
-        //     fetch("/toggle_system", {
-        //         method: "POST",
-        //         headers: {
-        //             "Content-Type": "application/json",
-        //         },
-        //         body: JSON.stringify({ action: action })
-        //     })
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         alert(data.message);
-        //     })
-        //     .catch(error => {
-        //         console.error("Error:", error);
-        //         alert("Terjadi kesalahan.");
-        //     });
-        // });
-
+        // Menangani aksi Approve/Tolak
         const buttons = document.querySelectorAll("button[data-action]");
 
         buttons.forEach(button => {
-            button.addEventListener("click", function(event) {
+            button.addEventListener("click", function (event) {
                 event.preventDefault();
                 const leaveRequestId = this.getAttribute("data-id");
                 const action = this.getAttribute("data-action");
@@ -120,41 +134,37 @@
                     },
                     body: JSON.stringify(data)
                 })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    alert("Terjadi kesalahan.");
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(data.message);
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        alert("Terjadi kesalahan.");
+                    });
             });
         });
 
-
+        // Fungsi untuk toggle sistem pengajuan (open/close)
         function sendToggleRequest(action) {
-            console.log(action);
             fetch('/toggle_system', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ action: action }) // Mengirimkan data JSON dengan action yang dipilih
+                body: JSON.stringify({ action: action })
             })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message); // Menampilkan pesan respons dari server
-            })
-            .catch(error => {
-                console.error('Error:', error); // Menangani error jika ada
-            });
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
-
     </script>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 </body>
+
 </html>

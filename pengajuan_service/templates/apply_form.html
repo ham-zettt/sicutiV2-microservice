@@ -1,45 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengajuan Cuti</title>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <script src="https://cdn.tailwindcss.com"></script>
+   <title>Pengajuan Cuti</title>
+   <script>
+      async function logout() {
+         const response = await fetch("http://localhost:5001/logout", {
+            method: "POST",
+         });
+         if (response.ok) {
+            document.cookie =
+               "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
+            window.location.href = "http://localhost:5003/"; // Redirect ke login
+         } else {
+            alert("Gagal logout.");
+         }
+      }
+   </script>
 </head>
-<body>
-    <h1>Pengajuan Cuti</h1>
-    <form id="formPengajuan">
-        <label for="nama">nama:</label>
-        <input type="text" id="nama" name="nama" required><br><br>
-        
-        <label for="alasan">Alasan:</label>
-        <textarea id="alasan" name="alasan" required></textarea><br><br>
-        
-        <button type="submit">Kirim Pengajuan</button>
-    </form>
-    <script>
-        document.getElementById('formPengajuan').addEventListener('submit', function(event) {
-            event.preventDefault();
 
-            const formData = {
-                nama: document.getElementById('nama').value,
-                alasan: document.getElementById('alasan').value
-            };
+<body class="bg-gray-100 text-gray-800">
+   <!-- Header -->
+   <header class="bg-blue-600 text-white py-4 shadow-md">
+      <div class="container mx-auto flex justify-between items-center">
+         <h1 class="text-lg font-bold">Sistem Pengajuan Cuti</h1>
+         <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-700 transition">
+            Logout
+         </button>
+      </div>
+   </header>
 
-            fetch('/apply', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
+   <!-- Main Content -->
+   <main class="container mx-auto mt-10">
+      <div class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-lg">
+         <h2 class="text-2xl font-bold text-center mb-6">Pengajuan Cuti</h2>
+
+         <form id="formPengajuan" class="space-y-4" enctype="multipart/form-data">
+            <!-- Alasan -->
+            <div>
+               <label for="alasan" class="block text-sm font-medium text-gray-700">Alasan</label>
+               <textarea id="alasan" name="alasan" required
+                  class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+            </div>
+
+            <!-- Input File: KTM -->
+            <div>
+               <label for="ktm" class="block text-sm font-medium text-gray-700">KTM (File PDF)</label>
+               <input type="file" id="ktm" name="ktm" accept="application/pdf" required
+                  class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <!-- Input File: Surat Pengajuan Cuti -->
+            <div>
+               <label for="suratPengajuan" class="block text-sm font-medium text-gray-700">Surat Pengajuan Cuti (File PDF)</label>
+               <input type="file" id="suratPengajuan" name="suratPengajuan" accept="application/pdf" required
+                  class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <!-- Input File: Surat Bebas Tanggungan -->
+            <div>
+               <label for="suratBebasTanggungan" class="block text-sm font-medium text-gray-700">Surat Bebas Tanggungan (File PDF)</label>
+               <input type="file" id="suratBebasTanggungan" name="suratBebasTanggungan" accept="application/pdf" required
+                  class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+               <button type="submit"
+                  class="bg-green-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-green-600 transition">
+                  Kirim Pengajuan
+               </button>
+            </div>
+         </form>
+      </div>
+   </main>
+
+   <script>
+      document.getElementById('formPengajuan').addEventListener('submit', function (event) {
+         event.preventDefault();
+
+         const formData = new FormData();
+
+         // Menambahkan data lainnya ke FormData
+         formData.append('alasan', document.getElementById('alasan').value);
+         formData.append('ktm', document.getElementById('ktm').files[0]);
+         formData.append('suratPengajuan', document.getElementById('suratPengajuan').files[0]);
+         formData.append('suratBebasTanggungan', document.getElementById('suratBebasTanggungan').files[0]);
+
+         fetch('/apply', {
+            method: 'POST',
+            body: formData
+         })
             .then(response => response.json())
             .then(data => {
-                alert(data.message);
+               alert(data.message);
             })
             .catch(error => {
-                console.error('Error:', error);
+               console.error('Error:', error);
             });
-        });
-    </script>
+      });
+   </script>
 </body>
+
 </html>

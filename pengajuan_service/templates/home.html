@@ -3,12 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mahasiswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Pengajuan Cuti Mahasiswa</title>
+    <script>
+      async function logout() {
+         const response = await fetch("http://localhost:5001/logout", {
+            method: "POST",
+         });
+         if (response.ok) {
+            document.cookie =
+               "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
+            window.location.href = "http://localhost:5003/"; // Redirect ke login
+         } else {
+            alert("Gagal logout.");
+         }
+      }
+   </script>
 </head>
-<body>
-    <h1>Selamat datang Mahasiswa</h1>
-    <a href="/apply">
-        <button>Ajukan Cuti</button>
-    </a>
+<body class="bg-gray-100 text-gray-800">
+   <header class="bg-blue-600 text-white py-4">
+      <div class="container mx-auto flex justify-between items-center">
+         <h1 class="text-xl font-semibold">Sistem Pengajuan Cuti</h1>
+         <button 
+            onclick="logout()" 
+            class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-700 transition">
+            Logout
+         </button>
+      </div>
+   </header>
+
+   <main class="container mx-auto py-8">
+      <div class="text-center mb-8">
+         <h2 class="text-2xl font-bold mb-2">Selamat Datang, Mahasiswa</h2>
+         <p class="text-gray-600">Gunakan sistem ini untuk mengajukan cuti Anda dengan mudah dan cepat.</p>
+      </div>
+
+      <div class="flex justify-center">
+         <a href="/apply" class="inline-block">
+            <button class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-600 transition">
+               Ajukan Cuti
+            </button>
+         </a>
+      </div>
+   </main>
+
 </body>
 </html>

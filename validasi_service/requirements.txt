@@ -3,3 +3,7 @@ flask_sqlalchemy
 mysql-connector-python
 redis
 rq
+flask_bcrypt
+
+
+pyjwt
