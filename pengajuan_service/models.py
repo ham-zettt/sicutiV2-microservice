@@ -42,6 +42,7 @@ class User(db.Model):
     username = db.Column(db.String(100), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.Enum(UserRole), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
     nim = db.Column(db.String(20), nullable=True)  # Nullable jika bukan mahasiswa
     prodi_id = db.Column(
         db.Integer, db.ForeignKey("prodi.id"), nullable=True

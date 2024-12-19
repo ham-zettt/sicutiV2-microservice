@@ -5,8 +5,33 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Detail Pengajuan</title>
       <script src="https://cdn.tailwindcss.com"></script>
+      <script>
+         async function logout() {
+            const response = await fetch("http://localhost:5002/logout", {
+               method: "POST",
+            });
+            if (response.ok) {
+               document.cookie =
+                  "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
+               window.location.href = "http://localhost:5003/"; // Redirect ke login
+            } else {
+               alert("Gagal logout.");
+            }
+         }
+      </script>
    </head>
    <body class="bg-gray-100">
+      <header class="bg-blue-600 text-white py-4">
+         <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-semibold">Sistem Pengajuan Cuti</h1>
+            <button
+               onclick="logout()"
+               class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-700 transition"
+            >
+               Logout
+            </button>
+         </div>
+      </header>
       <!-- Container Utama -->
       <div class="container mx-auto p-6">
          <h1 class="text-2xl font-bold text-gray-800 mb-6">Detail Pengajuan</h1>

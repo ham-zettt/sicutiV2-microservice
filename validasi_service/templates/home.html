@@ -2,14 +2,27 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Daftar Pengajuan Cuti Mahasiswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        async function logout() {
+            const response = await fetch("http://localhost:5002/logout", {
+                method: "POST",
+            });
+            if (response.ok) {
+                document.cookie =
+                    "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
+                window.location.href = "http://localhost:5003/"; // Redirect ke login
+            } else {
+                alert("Gagal logout.");
+            }
+        }
+    </script>
 </head>
 
 <body class="bg-gray-50">
-
     <!-- Header -->
     <header class="bg-blue-600 text-white py-4">
         <div class="container mx-auto flex justify-between items-center">
@@ -21,7 +34,9 @@
     </header>
 
     <div class="container mx-auto px-4 py-8">
-        <h2 class="text-2xl font-semibold mb-6">Daftar Pengajuan Cuti Mahasiswa</h2>
+        <h2 class="text-2xl font-semibold mb-6">
+            Daftar Pengajuan Cuti Mahasiswa
+        </h2>
 
         <!-- Status Sistem Pengajuan -->
         <div id="systemStatus" class="mb-6">
@@ -55,6 +70,8 @@
                         <th class="px-4 py-2">ID</th>
                         <th class="px-4 py-2">Nama Mahasiswa</th>
                         <th class="px-4 py-2">Alasan</th>
+                        <th class="px-4 py-2">Tahun Ajaran</th>
+                        <th class="px-4 py-2">Semester</th>
                         <th class="px-4 py-2">Status</th>
                         <th class="px-4 py-2">Aksi</th>
                     </tr>
@@ -63,24 +80,33 @@
                     {% for req in data %}
                     <tr class="border-b hover:bg-gray-50">
                         <td class="px-4 py-2">{{ req.id }}</td>
-                        <td class="px-4 py-2">{{ req.nama }}</td>
-                        <td class="px-4 py-2">{{ req.alasan }}</td>
+                        <td class="px-4 py-2 text-center">{{ req.nama }}</td>
+                        <td class="px-4 py-2 text-center">{{ req.alasan }}</td>
+                        <td class="px-4 py-2 text-center">
+                            {{ req.tahun_ajaran }}
+                        </td>
+                        <td class="px-4 py-2 text-center">{{ req.semester }}</td>
                         <td class="px-4 py-2">
-                            <div class="p-2 text-center {% if req.status == 'Disetujui' %}bg-green-500{% elif req.status == 'Ditolak' %}bg-red-500{% elif req.status == 'Closed' %}bg-gray-600{% else %}bg-yellow-500{% endif %} text-white rounded-lg">
+                            <div
+                                class="p-2 text-center {% if req.status == 'Disetujui' %}bg-green-500{% elif req.status == 'Ditolak' %}bg-red-500{% elif req.status == 'Closed' %}bg-gray-600{% else %}bg-yellow-500{% endif %} text-white rounded-lg">
                                 {{ req.status }}
                             </div>
                         </td>
                         <td class="px-4 py-2">
                             {% if req.status == 'Pending' %}
-                            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition mr-3" data-action="approve" data-id="{{ req.id }}">
+                            <button
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition mr-3"
+                                data-action="approve" data-id="{{ req.id }}">
                                 Approve
                             </button>
-                            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition mr-3" data-action="reject" data-id="{{ req.id }}">
+                            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition mr-3"
+                                data-action="reject" data-id="{{ req.id }}">
                                 Tolak
                             </button>
                             {% endif %}
                             <!-- Tombol Detail -->
-                            <a href="/detail_pengajuan/{{ req.id }}" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition">
+                            <a href="/detail_pengajuan/{{ req.id }}"
+                                class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition">
                                 Detail
                             </a>
                         </td>
@@ -92,35 +118,25 @@
     </div>
 
     <script>
-        // Fungsi Logout
-        function logout() {
-            const response = fetch("http://localhost:5001/logout", {
-                method: "POST",
-            });
-            response.then((res) => {
-                if (res.ok) {
-                    document.cookie =
-                        "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
-                    window.location.href = "http://localhost:5003/"; // Redirect ke login
-                } else {
-                    alert("Failed to logout.");
-                }
-            });
-        }
+
 
         // Fungsi untuk mengirim permintaan buka/tutup sistem pengajuan
-        document.getElementById('openSystem').addEventListener('click', function () {
-            sendToggleRequest('open');
-        });
+        document
+            .getElementById("openSystem")
+            .addEventListener("click", function () {
+                sendToggleRequest("open");
+            });
 
-        document.getElementById('closeSystem').addEventListener('click', function () {
-            sendToggleRequest('close');
-        });
+        document
+            .getElementById("closeSystem")
+            .addEventListener("click", function () {
+                sendToggleRequest("close");
+            });
 
         // Menangani aksi Approve/Tolak
         const buttons = document.querySelectorAll("button[data-action]");
 
-        buttons.forEach(button => {
+        buttons.forEach((button) => {
             button.addEventListener("click", function (event) {
                 event.preventDefault();
                 const leaveRequestId = this.getAttribute("data-id");
@@ -128,7 +144,7 @@
 
                 const data = {
                     id: leaveRequestId,
-                    action: action
+                    action: action,
                 };
 
                 fetch("/", {
@@ -136,14 +152,14 @@
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(data),
                 })
-                    .then(response => response.json())
-                    .then(data => {
+                    .then((response) => response.json())
+                    .then((data) => {
                         alert(data.message);
                         location.reload();
                     })
-                    .catch(error => {
+                    .catch((error) => {
                         console.error("Error:", error);
                         alert("Terjadi kesalahan.");
                     });
@@ -152,23 +168,22 @@
 
         // Fungsi untuk toggle sistem pengajuan (open/close)
         function sendToggleRequest(action) {
-            fetch('/toggle_system', {
-                method: 'POST',
+            fetch("/toggle_system", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ action: action })
+                body: JSON.stringify({ action: action }),
             })
-                .then(response => response.json())
-                .then(data => {
+                .then((response) => response.json())
+                .then((data) => {
                     alert(data.message);
                 })
-                .catch(error => {
-                    console.error('Error:', error);
+                .catch((error) => {
+                    console.error("Error:", error);
                 });
         }
     </script>
-
 </body>
 
 </html>

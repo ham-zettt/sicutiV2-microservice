@@ -1,51 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Pengajuan Cuti Mahasiswa</title>
-    <script>
-      async function logout() {
-         const response = await fetch("http://localhost:5001/logout", {
-            method: "POST",
-         });
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <script src="https://cdn.tailwindcss.com"></script>
+      <title>Pengajuan Cuti Mahasiswa</title>
+      <script>
+         async function logout() {
+            const response = await fetch("http://localhost:5001/logout", {
+               method: "POST",
+            });
+            if (response.ok) {
+               document.cookie =
+                  "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
+               window.location.href = "http://localhost:5003/"; // Redirect ke login
+            } else {
+               alert("Gagal logout.");
+            }
+         }
+      </script>
+   </head>
+   <body class="bg-gray-100 text-gray-800">
+      <header class="bg-blue-600 text-white py-4">
+         <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-semibold">Sistem Pengajuan Cuti</h1>
+            <button
+               onclick="logout()"
+               class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-700 transition"
+            >
+               Logout
+            </button>
+         </div>
+      </header>
+
+      <main class="container mx-auto py-8">
+         <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold mb-2">Selamat Datang, Mahasiswa</h2>
+            <p class="text-gray-600">
+               Gunakan sistem ini untuk mengajukan cuti Anda dengan mudah dan
+               cepat.
+            </p>
+         </div>
+
+         <div class="flex justify-center">
+            <a id="applyLink" href="/apply" class="inline-block">
+               <button
+                  id="applyButton"
+                  class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-600 transition"
+               >
+                  Ajukan Cuti
+               </button>
+            </a>
+            <p id="cutiInfo" class="text-red-500 font-bold hidden">
+               Anda dalam masa cuti
+            </p>
+         </div>
+
+         <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">
+               Status Pengajuan Cuti
+            </h3>
+            <div class="overflow-x-auto">
+               <table class="min-w-full border border-gray-300 rounded-lg">
+                  <thead>
+                     <tr class="bg-gray-50 text-gray-700">
+                        <th class="px-6 py-3 text-center border-b">ID</th>
+                        <th class="px-6 py-3 text-center border-b">Alasan</th>
+                        <th class="px-6 py-3 text-center border-b">
+                           Tahun Ajaran
+                        </th>
+                        <th class="px-6 py-3 text-center border-b">Semester</th>
+                        <th class="px-6 py-3 text-center border-b">Status</th>
+                     </tr>
+                  </thead>
+                  <tbody id="statusTable" class="text-gray-600">
+                     <!-- Data tabel akan diisi oleh JavaScript -->
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </main>
+   </body>
+   <script>
+      async function loadStatusTable() {
+         const response = await fetch("/status");
          if (response.ok) {
-            document.cookie =
-               "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Hapus token
-            window.location.href = "http://localhost:5003/"; // Redirect ke login
+            const data = await response.json();
+            const tableBody = document.getElementById("statusTable");
+            tableBody.innerHTML = ""; // Clear existing rows
+            data.forEach((item) => {
+               const row = `<tr class="hover:bg-gray-100">
+            <td class="px-6 py-4 text-center border-b">${item.id}</td>
+            <td class="px-6 py-4 text-center border-b">${item.alasan}</td>
+            <td class="px-6 py-4 text-center border-b">${item.tahun_ajaran}</td>
+            <td class="px-6 py-4 text-center border-b">${item.semester}</td>
+            <td class="px-6 py-4 text-center border-b font-semibold ${
+               item.status === "Disetujui"
+                  ? "text-green-600"
+                  : item.status === "Ditolak"
+                  ? "text-red-600"
+                  : "text-yellow-600"
+            }">${item.status}</td>
+         </tr>`;
+               tableBody.insertAdjacentHTML("beforeend", row);
+            });
          } else {
-            alert("Gagal logout.");
+            alert("Gagal memuat data status pengajuan.");
          }
       }
+
+      async function checkCutiStatus() {
+         try {
+            const response = await fetch("/check-cuti-status");
+            if (response.ok) {
+               const data = await response.json();
+
+               const applyLink = document.getElementById("applyLink");
+               const applyButton = document.getElementById("applyButton");
+               const cutiInfo = document.getElementById("cutiInfo");
+
+               // Jika pengguna tidak bisa mengajukan cuti
+               if (data.cannotApply) {
+                  applyLink.classList.add("hidden");
+                  cutiInfo.classList.remove("hidden");
+               }
+            } else {
+               alert("Gagal memeriksa status cuti.");
+            }
+         } catch (error) {
+            console.error("Error:", error);
+            alert("Terjadi kesalahan saat memeriksa status cuti.");
+         }
+      }
+
+      // Cek status cuti saat halaman dimuat
+      window.onload = function () {
+         checkCutiStatus();
+         loadStatusTable();
+      };
    </script>
-</head>
-<body class="bg-gray-100 text-gray-800">
-   <header class="bg-blue-600 text-white py-4">
-      <div class="container mx-auto flex justify-between items-center">
-         <h1 class="text-xl font-semibold">Sistem Pengajuan Cuti</h1>
-         <button 
-            onclick="logout()" 
-            class="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-700 transition">
-            Logout
-         </button>
-      </div>
-   </header>
-
-   <main class="container mx-auto py-8">
-      <div class="text-center mb-8">
-         <h2 class="text-2xl font-bold mb-2">Selamat Datang, Mahasiswa</h2>
-         <p class="text-gray-600">Gunakan sistem ini untuk mengajukan cuti Anda dengan mudah dan cepat.</p>
-      </div>
-
-      <div class="flex justify-center">
-         <a href="/apply" class="inline-block">
-            <button class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-green-600 transition">
-               Ajukan Cuti
-            </button>
-         </a>
-      </div>
-   </main>
-
-</body>
 </html>

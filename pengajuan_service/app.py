@@ -27,8 +27,8 @@ from functools import wraps
 import os
 from werkzeug.utils import secure_filename
 import uuid
-import uuid
 from datetime import datetime
+
 
 app = Flask(__name__)
 
@@ -41,6 +41,8 @@ UPLOAD_FOLDER = "var/uploads"
 ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 bcrypt = Bcrypt(app)
+
+
 
 # Inisialisasi database
 db.init_app(app)
@@ -131,8 +133,26 @@ def apply():
             )
 
         alasan = request.form.get("alasan")
-
         user_id = request.user_id
+
+        total_pengajuan = PengajuanCuti.query.filter_by(user_id=user_id).count()
+
+        current_cuti = PengajuanCuti.query.filter_by(
+            user_id=user_id,
+            tahun_ajaran_id=TAHUN_AJARAN_ID,
+            semester_id=SEMESTER_ID,
+            status="Disetujui",  # Hanya pengajuan dengan status 'Disetujui'
+        ).first()
+
+        if total_pengajuan >= 2:
+            return jsonify({"message": "Batas pengajuan cuti sudah tercapai."}), 403
+
+        if current_cuti is not None:
+            return (
+                jsonify({"message": "Anda sudah mengajukan cuti pada semester ini."}),
+                403,
+            )
+
         # Simpan pengajuan cuti ke database
         pengajuan = PengajuanCuti(
             user_id=user_id,
@@ -168,7 +188,7 @@ def apply():
                 # Simpan info dokumen ke database dengan nama asli dan nama unik
                 dokumen = DokumenPendukung(
                     nama_file=file.filename,  # Simpan nama asli file
-                    path=unique_filename, # Simpan path dengan nama unik
+                    path=unique_filename,  # Simpan path dengan nama unik
                     pengajuan_id=pengajuan.id,
                 )
                 db.session.add(dokumen)
@@ -188,6 +208,58 @@ def apply():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"message": "Terdapat Kesalahan"}), 500
+
+
+@app.route("/status", methods=["GET"])
+@token_required
+def get_status():
+    try:
+        user_id = request.user_id
+        pengajuan_cuti = PengajuanCuti.query.filter_by(user_id=user_id).all()
+
+        data = [
+            {
+                "id": pengajuan.id,
+                "alasan": pengajuan.alasan,
+                "tahun_ajaran": pengajuan.tahun_ajaran.tahun,
+                "semester": pengajuan.semester.semester.value,  # Asumsikan SemesterStatus adalah Enum
+                "status": pengajuan.status,
+            }
+            for pengajuan in pengajuan_cuti
+        ]
+
+        return jsonify(data), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": "Gagal mengambil data status pengajuan."}), 500
+
+
+@app.route("/check-cuti-status", methods=["GET"])
+@token_required
+def check_cuti_status():
+    try:
+        user_id = request.user_id
+        current_year = TAHUN_AJARAN_ID
+        current_semester = SEMESTER_ID
+
+        # Hitung jumlah pengajuan cuti pengguna
+        total_pengajuan = PengajuanCuti.query.filter_by(user_id=user_id).count()
+
+        # Cek apakah sudah ada pengajuan di tahun dan semester yang sama
+        current_cuti = PengajuanCuti.query.filter_by(
+            user_id=user_id,
+            tahun_ajaran_id=TAHUN_AJARAN_ID,
+            semester_id=SEMESTER_ID,
+            status="Disetujui",  # Hanya pengajuan dengan status 'Disetujui'
+        ).first()
+
+        # Atur kondisi untuk tidak bisa mengajukan
+        cannot_apply = total_pengajuan >= 2 or current_cuti is not None
+
+        return jsonify({"cannotApply": cannot_apply}), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"message": "Gagal memeriksa status cuti."}), 500
 
 
 # Route untuk mengakses file
@@ -266,6 +338,7 @@ def seed_data():
             mahasiswa1 = User(
                 nama="Ahmad Mahasiswa",
                 username="mahasiswa1",
+                email="220411100029@student.trunojoyo.ac.id",
                 password=bcrypt.generate_password_hash("mahasiswa123"),
                 role=UserRole.mahasiswa,
                 nim="123456789",
@@ -274,6 +347,7 @@ def seed_data():
             mahasiswa2 = User(
                 nama="Budi Mahasiswa",
                 username="mahasiswa2",
+                email="ilhamzakaria3024@gmail.com",
                 password=bcrypt.generate_password_hash("mahasiswa123"),
                 role=UserRole.mahasiswa,
                 nim="987654321",
@@ -282,6 +356,7 @@ def seed_data():
             admin = User(
                 nama="Admin BAK",
                 username="admin",
+                email="admin@gmail.com",
                 password=bcrypt.generate_password_hash("admin123"),
                 role=UserRole.admin,
             )
