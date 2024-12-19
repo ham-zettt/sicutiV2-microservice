@@ -5,7 +5,7 @@ services:
     build: ./pengajuan_service
     container_name: pengajuan_service
     ports:
-      - "5001:5000" 
+      - "5001:5000"
     depends_on:
       - db
       - redis  # Menambahkan dependensi pada Redis
@@ -57,13 +57,14 @@ services:
       - "3309:3306"
 
   redis:
-    image: redis:alpine 
+    image: redis:alpine
     container_name: redis
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data  
+      - redis-data:/data
 
 volumes:
   db-data:
   redis-data:
+  

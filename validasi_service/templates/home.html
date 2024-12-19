@@ -75,10 +75,14 @@
                             <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition mr-3" data-action="approve" data-id="{{ req.id }}">
                                 Approve
                             </button>
-                            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition" data-action="reject" data-id="{{ req.id }}">
+                            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition mr-3" data-action="reject" data-id="{{ req.id }}">
                                 Tolak
                             </button>
                             {% endif %}
+                            <!-- Tombol Detail -->
+                            <a href="/detail_pengajuan/{{ req.id }}" class="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition">
+                                Detail
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -90,7 +94,7 @@
     <script>
         // Fungsi Logout
         function logout() {
-            const response = fetch("http://localhost:5001//logout", {
+            const response = fetch("http://localhost:5001/logout", {
                 method: "POST",
             });
             response.then((res) => {

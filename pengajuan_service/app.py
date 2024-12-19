@@ -1,28 +1,59 @@
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import (
+    Flask,
+    request,
+    jsonify,
+    render_template,
+    redirect,
+    url_for,
+    send_from_directory,
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import redis
 from rq import Queue
-from models import db, PengajuanCuti  # Pastikan models.py memiliki definisi model yang benar
-
-from models import db, UserRole, TahunAjaran, Semester, SemesterStatus, Prodi, User
+from models import (
+    db,
+    PengajuanCuti,
+    UserRole,
+    TahunAjaran,
+    Semester,
+    SemesterStatus,
+    Prodi,
+    User,
+    DokumenPendukung,
+)
 import jwt
 from functools import wraps
+import os
+from werkzeug.utils import secure_filename
+import uuid
+import uuid
+from datetime import datetime
 
 app = Flask(__name__)
 
 # Konfigurasi database MySQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:password@db/sicuti'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:password@db/sicuti"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
+UPLOAD_FOLDER = "var/uploads"
+
+ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 bcrypt = Bcrypt(app)
 
 # Inisialisasi database
 db.init_app(app)
 
 # Inisialisasi Redis dan Queue
-redis_conn = redis.StrictRedis(host='redis', port=6379, db=0)  # Koneksi ke Redis service yang ada di docker-compose
+redis_conn = redis.StrictRedis(
+    host="redis", port=6379, db=0
+)  # Koneksi ke Redis service yang ada di docker-compose
 queue = Queue(connection=redis_conn)  # Membuat queue untuk menambahkan task ke Redis
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def token_required(f):
@@ -49,6 +80,7 @@ def token_required(f):
 
     return decorated
 
+
 @app.route("/logout", methods=["POST"])
 @token_required
 def logout():
@@ -62,53 +94,107 @@ with app.app_context():
 
 
 def check_admin_service_status():
-    status = redis_conn.get('admin_service_status')
-    if status is None or status.decode() != 'active':
+    status = redis_conn.get("admin_service_status")
+    if status is None or status.decode() != "active":
         return False
     return True
 
-@app.route('/', methods=['GET'])
+
+@app.route("/", methods=["GET"])
 @token_required
 def welcome():
-    return render_template('home.html')
+    return render_template("home.html")
 
 
-@app.route('/apply', methods=['GET'])
+@app.route("/apply", methods=["GET"])
 @token_required
 def apply_form():
-    return render_template('apply_form.html')
-
+    return render_template("apply_form.html")
 
 
 TAHUN_AJARAN_ID = 1
 SEMESTER_ID = 1
 
 
-@app.route('/apply', methods=['POST'])
+@app.route("/apply", methods=["POST"])
 @token_required
 def apply():
     try:
         if not check_admin_service_status():
-            return jsonify({"message": "Service validasi sedang tidak tersedia. Silakan coba beberapa saat lagi."}), 503
-            
-        data = request.get_json()
-        alasan = data.get('alasan')
+            return (
+                jsonify(
+                    {
+                        "message": "Service validasi sedang tidak tersedia. Silakan coba beberapa saat lagi."
+                    }
+                ),
+                503,
+            )
 
+        alasan = request.form.get("alasan")
 
         user_id = request.user_id
         # Simpan pengajuan cuti ke database
-        pengajuan = PengajuanCuti(user_id=user_id, alasan=alasan, tahun_ajaran_id=TAHUN_AJARAN_ID, semester_id=SEMESTER_ID)
+        pengajuan = PengajuanCuti(
+            user_id=user_id,
+            alasan=alasan,
+            tahun_ajaran_id=TAHUN_AJARAN_ID,
+            semester_id=SEMESTER_ID,
+        )
         db.session.add(pengajuan)
+        db.session.commit()
+
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+        # Proses upload file
+        files = {
+            "ktm": request.files.get("ktm"),
+            "surat_pengajuan": request.files.get("surat_pengajuan"),
+            "surat_bebas": request.files.get("surat_bebas"),
+        }
+
+        for doc_type, file in files.items():
+            if file and allowed_file(file.filename):
+                # Dapatkan ekstensi file asli
+                original_extension = file.filename.rsplit(".", 1)[1].lower()
+
+                # Buat nama file unik dengan UUID dan timestamp
+                unique_filename = f"{doc_type}_{uuid.uuid4()}_{int(datetime.now().timestamp())}.{original_extension}"
+
+                # Simpan file dengan nama unik
+                filepath = os.path.join(app.config["UPLOAD_FOLDER"], unique_filename)
+                file.save(filepath)
+
+                # Simpan info dokumen ke database dengan nama asli dan nama unik
+                dokumen = DokumenPendukung(
+                    nama_file=file.filename,  # Simpan nama asli file
+                    path=unique_filename, # Simpan path dengan nama unik
+                    pengajuan_id=pengajuan.id,
+                )
+                db.session.add(dokumen)
+
         db.session.commit()
 
         # Setelah pengajuan cuti berhasil, kirimkan task ke Redis untuk validasi
         # Misalnya task ini memanggil fungsi validasi yang ada di service admin
-        job = queue.enqueue('validasi_service.process_validasi', pengajuan.id)
+        job = queue.enqueue("validasi_service.process_validasi", pengajuan.id)
 
-        return jsonify({"message": "Pengajuan berhasil dibuat, sedang diproses!"}), 201
+        return (
+            jsonify(
+                {"message": "Pengajuan berhasil dibuat dan dokumen berhasil diupload!"}
+            ),
+            201,
+        )
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"message": "Terdapat Kesalahan"}), 500
+
+
+# Route untuk mengakses file
+@app.route("/uploads/<path:filename>")
+@token_required
+def uploaded_file(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 # bautian root untuk rollback database
@@ -122,6 +208,7 @@ def rollback_data():
 def create_db():
     db.create_all()
     return jsonify({"message": "Database created successfully!"})
+
 
 @app.route("/seeder", methods=["GET"])
 def seed_data():
@@ -204,5 +291,5 @@ def seed_data():
 
 
 # Jalankan Aplikasi
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0")

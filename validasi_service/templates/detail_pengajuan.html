@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Detail Pengajuan</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+   </head>
+   <body class="bg-gray-100">
+      <!-- Container Utama -->
+      <div class="container mx-auto p-6">
+         <h1 class="text-2xl font-bold text-gray-800 mb-6">Detail Pengajuan</h1>
+
+         <!-- Informasi Pengajuan -->
+         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">
+               Informasi Pengajuan
+            </h2>
+            <p class="text-gray-600">
+               <span class="font-bold">ID Pengajuan:</span> {{ pengajuan.id }}
+            </p>
+            <p class="text-gray-600">
+               <span class="font-bold">Nama:</span> {{ pengajuan.nama }}
+            </p>
+            <p class="text-gray-600">
+               <span class="font-bold">Alasan:</span> {{ pengajuan.alasan }}
+            </p>
+            <p class="text-gray-600">
+               <span class="font-bold">Status:</span>
+               <span
+                  class="px-2 py-1 text-sm rounded {% if pengajuan.status == 'Disetujui' %} bg-green-100 text-green-800 {% elif pengajuan.status == 'Ditolak' %} bg-red-100 text-red-800 {% else %} bg-yellow-100 text-yellow-800 {% endif %}"
+               >
+                  {{ pengajuan.status }}
+               </span>
+            </p>
+         </div>
+
+         <!-- Dokumen Pendukung -->
+         <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">
+               Dokumen Pendukung
+            </h2>
+            <ul class="list-disc list-inside text-gray-600">
+               {% for dokumen in pengajuan.dokumen %}
+               <li>
+                  <a
+                     href="/uploads/{{ dokumen.nama_file }}"
+                     class="text-blue-500 hover:underline"
+                     target="_blank"
+                  >
+                     {{ dokumen.nama_file }}
+                  </a>
+               </li>
+               {% endfor %}
+            </ul>
+         </div>
+
+         <!-- Tombol Kembali -->
+         <div class="mt-6">
+            <a
+               href="/"
+               class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+            >
+               Kembali
+            </a>
+         </div>
+      </div>
+   </body>
+</html>

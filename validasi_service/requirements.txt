@@ -4,6 +4,6 @@ mysql-connector-python
 redis
 rq
 flask_bcrypt
-
+werkzeug
 
 pyjwt

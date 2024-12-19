@@ -75,7 +75,7 @@ class Semester(db.Model):
 class PengajuanCuti(db.Model):
     __tablename__ = "pengajuan_cuti"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False) 
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     alasan = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), default="Pending")  # Ditolak, Disetujui, Pending
     tahun_ajaran_id = db.Column(
