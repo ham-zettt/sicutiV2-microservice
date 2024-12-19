@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, current_app, send_from_directory
 from models import db, PengajuanCuti
 import redis
 from rq import Queue
@@ -6,6 +6,7 @@ from rq.job import Job
 from flask_bcrypt import Bcrypt
 import jwt
 from functools import wraps
+import os
 
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ queue = Queue(connection=redis_conn)
 #             if request.endpoint == 'apply':
 #                 return jsonify({"message": "Sistem pengajuan cuti sedang ditutup. Cuti tidak dapat diajukan."}), 403
 #         redis_conn.set('admin_service_status', 'active', ex=60)
-        
+
 #     except Exception as e:
 #         redis_conn.set('admin_service_status', 'inactive', ex=60)
 #         print(f"Error while checking system status: {e}")
@@ -85,14 +86,13 @@ def check_status():
         admin_status = redis_conn.get('admin_service_status')
 
         if admin_status:
-            redis_status = admin_status.decode('utf-8') 
+            redis_status = admin_status.decode('utf-8')
         else:
             redis_status = 'inactive'
 
         return jsonify({"status": redis_status}), 200
     except redis.ConnectionError:
         return jsonify({"status": "inactive"}), 500
-
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -110,7 +110,7 @@ def get_leave_requests():
         pengajuan_id = data.get("id")
         action = data.get("action")
         pengajuan = PengajuanCuti.query.get_or_404(pengajuan_id)
-        
+
         if action == 'approve':
             pengajuan.status = 'Disetujui'
             message = "Leave request approved!"
@@ -134,5 +134,51 @@ def get_leave_requests():
             } for cuti in data_cuti],
             redis_status=redis_status
         )
+
+
+@app.route("/detail_pengajuan/<int:pengajuan_id>", methods=["GET"])
+@token_required
+def detail_pengajuan(pengajuan_id):
+    try:
+        pengajuan = PengajuanCuti.query.get_or_404(pengajuan_id)
+        dokumen_pendukung = pengajuan.dokumen_pendukungs
+
+        data = {
+            "id": pengajuan.id,
+            "nama": (
+                pengajuan.user.nama if pengajuan.user else "Tidak Diketahui"
+            ),  # Relasi ke tabel user
+            "alasan": pengajuan.alasan,
+            "status": pengajuan.status,
+            "dokumen": [
+                {
+                    "nama_file": dokumen.nama_file,
+                    "path": f"../pengajuan_service/uploads/{dokumen.path}",  # Path untuk akses file
+                }
+                for dokumen in dokumen_pendukung
+            ],
+        }
+
+        return render_template("detail_pengajuan.html", pengajuan=data)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return (
+            jsonify({"message": "Terjadi kesalahan saat mengambil detail pengajuan"}),
+            500,
+        )
+
+PENGAJUAN_SERVICE_URL = "http://localhost:5000/var/uploads/"
+@app.route("/uploads/<filename>")
+def get_uploaded_file(filename):
+    # Path lengkap ke folder uploads
+    upload_folder = os.path.join(current_app.root_path, "var", "uploads")
+    try:
+        # Mengirim file dari folder uploads
+        return send_from_directory(upload_folder, filename)
+    except FileNotFoundError:
+        return jsonify({"message": "File not found"}), 404
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

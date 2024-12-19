@@ -3,6 +3,7 @@ flask_sqlalchemy
 mysql-connector-python
 redis
 rq
+werkzeug
 
 
 flask_bcrypt
@@ -11,3 +12,5 @@ flask_bcrypt
 pyjwt
 
 flask_cors
+
+uuid
