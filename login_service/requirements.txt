@@ -9,3 +9,5 @@ flask_bcrypt
 pyjwt
 
 flask_cors
+
+flask_mail

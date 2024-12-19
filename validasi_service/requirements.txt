@@ -7,3 +7,5 @@ flask_bcrypt
 werkzeug
 
 pyjwt
+
+flask_mail
