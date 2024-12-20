@@ -69,15 +69,30 @@
                {% for dokumen in pengajuan.dokumen %}
                <li>
                   <a
-                     href="/uploads/{{ dokumen.nama_file }}"
+                     href="http://localhost:5001/uploads/{{ dokumen.path }}"
                      class="text-blue-500 hover:underline"
                      target="_blank"
                   >
                      {{ dokumen.nama_file }}
-                  </a>
+                  </href=>
                </li>
                {% endfor %}
             </ul>
+            {% if pengajuan.status == "Disetujui" and pengajuan.surat_keterangan
+            %}
+            <div class="mt-4">
+               <h5>Surat Keterangan Cuti:</h5>
+               <div class="list-group">
+                  <a
+                     href="/uploads/{{ pengajuan.surat_keterangan.nama_file }}"
+                     class="list-group-item list-group-item-action"
+                     target="_blank"
+                  >
+                     {{ pengajuan.surat_keterangan.nama_file }}
+                  </a>
+               </div>
+            </div>
+            {% endif %}
          </div>
 
          <!-- Tombol Kembali -->

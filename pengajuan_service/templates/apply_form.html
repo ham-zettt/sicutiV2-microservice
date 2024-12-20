@@ -23,7 +23,7 @@
 
    <body class="bg-gray-100 text-gray-800">
       <!-- Header -->
-      <header class="bg-blue-600 text-white py-4 shadow-md">
+      <header class="bg-blue-600 text-white py-4 shadow-md px-5">
          <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-lg font-bold">Sistem Pengajuan Cuti</h1>
             <button
@@ -37,92 +37,90 @@
 
       <!-- Main Content -->
       <main class="container mx-auto mt-10">
-         <div class="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold text-center mb-6">Pengajuan Cuti</h2>
+         <div
+            class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg border-2 border-black"
+         >
+            <h2 class="text-2xl font-semibold text-center mb-6">
+               Pengajuan Cuti
+            </h2>
 
             <form id="formPengajuan" class="space-y-4">
+               <!-- KTM -->
+               <div>
+                  <label
+                     for="ktm"
+                     class="block text-sm font-medium text-gray-700 mb-2"
+                     >KTM</label
+                  >
+                  <input
+                     type="file"
+                     id="ktm"
+                     name="ktm"
+                     accept=".pdf,.jpg,.jpeg,.png"
+                     required
+                     class="w-full p-3 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+               </div>
+
+               <!-- Surat Pengajuan -->
+               <div>
+                  <label
+                     for="surat_pengajuan"
+                     class="block text-sm font-medium text-gray-700 mb-2"
+                     >Surat Pengajuan</label
+                  >
+                  <input
+                     type="file"
+                     id="surat_pengajuan"
+                     name="surat_pengajuan"
+                     accept=".pdf"
+                     required
+                     class="w-full p-3 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+               </div>
+
+               <!-- Surat Bebas Tanggungan -->
+               <div>
+                  <label
+                     for="surat_bebas"
+                     class="block text-sm font-medium text-gray-700 mb-2"
+                     >Surat Bebas Tanggungan</label
+                  >
+                  <input
+                     type="file"
+                     id="surat_bebas"
+                     name="surat_bebas"
+                     accept=".pdf"
+                     required
+                     class="w-full p-3 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+               </div>
+
                <!-- Alasan -->
-               <form
-                  id="formPengajuan"
-                  class="space-y-4"
-                  enctype="multipart/form-data"
-               >
-                  <!-- Alasan -->
-                  <div>
-                     <label
-                        for="alasan"
-                        class="block text-sm font-medium text-gray-700"
-                        >Alasan</label
-                     >
-                     <textarea
-                        id="alasan"
-                        name="alasan"
-                        required
-                        class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                     ></textarea>
-                  </div>
+               <div>
+                  <label
+                     for="alasan"
+                     class="block text-sm font-medium text-gray-700 mb-2"
+                     >Alasan</label
+                  >
+                  <textarea
+                     id="alasan"
+                     name="alasan"
+                     required
+                     class="w-full p-3 border-2 border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     rows="3"
+                  ></textarea>
+               </div>
 
-                  <!-- KTM -->
-                  <div>
-                     <label
-                        for="ktm"
-                        class="block text-sm font-medium text-gray-700"
-                        >KTM</label
-                     >
-                     <input
-                        type="file"
-                        id="ktm"
-                        name="ktm"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        required
-                        class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                     />
-                  </div>
-
-                  <!-- Surat Pengajuan -->
-                  <div>
-                     <label
-                        for="surat_pengajuan"
-                        class="block text-sm font-medium text-gray-700"
-                        >Surat Pengajuan</label
-                     >
-                     <input
-                        type="file"
-                        id="surat_pengajuan"
-                        name="surat_pengajuan"
-                        accept=".pdf"
-                        required
-                        class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                     />
-                  </div>
-
-                  <!-- Surat Bebas Tanggungan -->
-                  <div>
-                     <label
-                        for="surat_bebas"
-                        class="block text-sm font-medium text-gray-700"
-                        >Surat Bebas Tanggungan</label
-                     >
-                     <input
-                        type="file"
-                        id="surat_bebas"
-                        name="surat_bebas"
-                        accept=".pdf"
-                        required
-                        class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                     />
-                  </div>
-
-                  <!-- Submit Button -->
-                  <div class="text-center">
-                     <button
-                        type="submit"
-                        class="bg-green-500 text-white px-6 py-2 rounded-lg font-medium shadow hover:bg-green-600 transition"
-                     >
-                        Kirim Pengajuan
-                     </button>
-                  </div>
-               </form>
+               <!-- Submit Button -->
+               <div class="flex justify-center">
+                  <button
+                     type="submit"
+                     class="w-full bg-green-500 text-white p-3 rounded-md font-semibold hover:bg-green-600 transition duration-200"
+                  >
+                     Kirim Pengajuan
+                  </button>
+               </div>
             </form>
          </div>
       </main>

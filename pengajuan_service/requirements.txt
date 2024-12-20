@@ -16,3 +16,4 @@ flask_cors
 uuid
 
 flask_mail
+reportlab
