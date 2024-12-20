@@ -6,8 +6,9 @@ from flask import (
     redirect,
     current_app,
     send_from_directory,
+    send_file,
 )
-from models import db, PengajuanCuti
+from models import db, PengajuanCuti, SuratKeteranganCuti
 import redis
 from rq import Queue
 from rq.job import Job
@@ -17,17 +18,30 @@ from functools import wraps
 import os
 from flask_mail import Mail, Message
 
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from flask import Response
+from io import BytesIO
+
+import uuid
+from datetime import datetime
+
+
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root:password@db/sicuti"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
 
+UPLOAD_FOLDER = "var/uploads"
+
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 
 app.config["MAIL_SERVER"] = "smtp.gmail.com"  # Server SMTP Gmail
 app.config["MAIL_PORT"] = 465  # Port untuk TLS
-app.config["MAIL_USE_TLS"] = False # Menggunakan TLS
-app.config['MAIL_USE_SSL'] = True
+app.config["MAIL_USE_TLS"] = False  # Menggunakan TLS
+app.config["MAIL_USE_SSL"] = True
 app.config["MAIL_USERNAME"] = "faqih3935@gmail.com"  # Alamat email pengirim
 app.config["MAIL_PASSWORD"] = "qgwgwghmsmwaahtx"  # Password email pengirim
 app.config["MAIL_DEFAULT_SENDER"] = "faqih3935@gmail.com"  # Email pengirim default
@@ -128,6 +142,80 @@ def send_approval_email(user_email, user_name, action):
         print(f"Terjadi kesalahan saat mengirim email: {e}")
 
 
+def generate_surat_keterangan_cuti(
+    nama, nim, prodi, semester, tahun_ajaran, kelas
+):
+    pdf_buffer = BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+
+    # Header
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(200, 770, "SURAT IZIN BERHENTI STUDI SEMENTARA (BSS)")
+    c.setFont("Helvetica", 12)
+    c.drawString(100, 750, f"Nomor: B/{uuid.uuid4().hex[:6]}/UN46.1/KM.00.01/2024")
+
+    # Informasi Mahasiswa
+    c.setFont("Helvetica", 12)
+    c.drawString(
+        100,
+        720,
+        "Menunjukkan Surat Permohonan Berhenti Studi Sementara (BSS) Saudara atas:",
+    )
+    c.drawString(100, 700, f"Nama               : {nama}")
+    c.drawString(100, 685, f"NIM                : {nim}")
+    c.drawString(100, 670, f"Program Studi      : {prodi}")
+    c.drawString(
+        100, 640, f"Tanggal Terbit     : {datetime.now().strftime('%d %B %Y')}"
+    )
+
+    # Informasi Semester
+    c.drawString(
+        100,
+        610,
+        "Dan diberitahukan bahwa saudara diijinkan berhenti studi sementara untuk:",
+    )
+    c.drawString(100, 590, f"Semester           : {semester}")
+    c.drawString(100, 575, f"Kelas              : {kelas}")
+    c.drawString(100, 560, f"Tahun Akademik     : {tahun_ajaran}")
+
+    # Informasi Her-Registrasi
+    c.drawString(
+        100,
+        530,
+        "Selanjutnya untuk mengikuti kegiatan akademik kembali, Saudara harus melakukan Her-",
+    )
+    c.drawString(
+        100,
+        515,
+        "Registrasi pada masa registrasi yang telah ditetapkan dalam kalender akademik untuk:",
+    )
+    c.drawString(100, 495, f"Semester           : Genap")
+    c.drawString(100, 480, f"Kelas              : {kelas}")
+    c.drawString(100, 465, f"Tahun Akademik     : {tahun_ajaran}")
+
+    # Footer
+    c.drawString(
+        100,
+        430,
+        "Dan melakukan ketentuan - ketentuan yang telah ditetapkan di Universitas Trunojoyo",
+    )
+    c.drawString(
+        100,
+        415,
+        "Madura. Demikian Surat Ijin Berhenti Studi Sementara untuk dipergunakan sebagaimana",
+    )
+    c.drawString(100, 400, "mestinya.")
+
+    # Tanda Tangan
+    c.drawString(100, 350, f"Bangkalan, {datetime.now().strftime('%d %B %Y')}")
+    c.drawString(100, 335, "Wakil Rektor Biro Akademik")
+    c.drawString(100, 300, "Supriyanto")
+
+    c.save()
+    pdf_buffer.seek(0)
+    return pdf_buffer
+
+
 @app.route("/", methods=["GET", "POST"])
 @token_required
 def get_leave_requests():
@@ -148,6 +236,31 @@ def get_leave_requests():
         if action == "approve":
             pengajuan.status = "Disetujui"
             message = "Leave request approved!"
+            pdf_buffer = generate_surat_keterangan_cuti (
+                nama=user.nama,
+                nim=user.nim,
+                prodi=user.prodi.nama,
+                semester=pengajuan.semester.semester.value,
+                tahun_ajaran=pengajuan.tahun_ajaran.tahun,
+                kelas="Reguler",  # Jika kelas selalu reguler
+            )
+
+
+            if not os.path.exists(UPLOAD_FOLDER):
+                os.makedirs(UPLOAD_FOLDER)
+            unique_filename = f"surat_keterangan_cuti_{uuid.uuid4().hex[:8]}.pdf"
+            file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+            with open(file_path, "wb") as f:
+                f.write(pdf_buffer.getvalue())
+
+
+            surat_keterangan = SuratKeteranganCuti(
+                user_id=user.id,
+                pengajuan_id=pengajuan.id,
+                nama_file=unique_filename,
+                path=file_path,
+            )
+            db.session.add(surat_keterangan)
             send_approval_email(user.email, user.nama, "approve")
         elif action == "reject":
             pengajuan.status = "Ditolak"
@@ -186,6 +299,11 @@ def detail_pengajuan(pengajuan_id):
     try:
         pengajuan = PengajuanCuti.query.get_or_404(pengajuan_id)
         dokumen_pendukung = pengajuan.dokumen_pendukungs
+        surat_keterangan = None
+        if pengajuan.status == "Disetujui":
+            surat_keterangan = SuratKeteranganCuti.query.filter_by(
+                pengajuan_id=pengajuan_id
+            ).first()
 
         data = {
             "id": pengajuan.id,
@@ -197,10 +315,15 @@ def detail_pengajuan(pengajuan_id):
             "dokumen": [
                 {
                     "nama_file": dokumen.nama_file,
-                    "path": f"../pengajuan_service/uploads/{dokumen.path}",  # Path untuk akses file
+                    "path": dokumen.path,  # Path untuk akses file
                 }
                 for dokumen in dokumen_pendukung
             ],
+            "surat_keterangan": (
+                {"nama_file": surat_keterangan.nama_file, "path": surat_keterangan.path}
+                if surat_keterangan
+                else None
+            ),
         }
 
         return render_template("detail_pengajuan.html", pengajuan=data)

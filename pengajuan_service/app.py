@@ -6,6 +6,7 @@ from flask import (
     redirect,
     url_for,
     send_from_directory,
+    send_file,
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -30,6 +31,12 @@ import uuid
 from datetime import datetime
 
 
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from flask import Response
+from io import BytesIO
+
+
 app = Flask(__name__)
 
 # Konfigurasi database MySQL
@@ -41,7 +48,6 @@ UPLOAD_FOLDER = "var/uploads"
 ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 bcrypt = Bcrypt(app)
-
 
 
 # Inisialisasi database
@@ -260,6 +266,89 @@ def check_cuti_status():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"message": "Gagal memeriksa status cuti."}), 500
+
+
+def generate_surat_permintaan(
+    nama, nim, prodi, alamat, semester, tahun_ajaran
+):
+    pdf_buffer = BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+
+    # Header Surat
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(100, 770, "SURAT PERMOHONAN BERHENTI STUDI SEMENTARA (BSS)")
+
+    # Informasi Tujuan
+    c.setFont("Helvetica", 12)
+    c.drawString(100, 750, "Kepada Yth.")
+    c.drawString(100, 735, "Kepala BAAKPSI")
+    c.drawString(100, 720, "Universitas Trunojoyo Madura")
+    c.drawString(100, 705, "Di Bangkalan")
+
+    # Data Mahasiswa
+    c.setFont("Helvetica", 12)
+    c.drawString(100, 675, f"Dengan ini saya:")
+    c.drawString(120, 660, f"Nama: {nama}")
+    c.drawString(120, 645, f"NIM: {nim}")
+    c.drawString(120, 615, f"Program Studi: {prodi}")
+    c.drawString(120, 600, f"Alamat Rumah: {alamat}")
+
+    # Informasi Permohonan
+    c.drawString(
+        100, 580, f"Mengajukan permohonan Berhenti Studi Sementara (BSS) untuk:"
+    )
+    c.drawString(120, 565, f"Semester: {semester} tahun akademik {tahun_ajaran}")
+    c.drawString(
+        100, 550, "Demikian surat permohonan ini kami sampaikan, terima kasih."
+    )
+
+    # Tanda Tangan
+    c.drawString(100, 520, "Orang Tua Wali,")
+    c.drawString(100, 490, "..............................")
+    c.drawString(400, 520, "Bangkalan, 20 Desember 2024")
+    c.drawString(400, 490, "Pemohon,")
+    c.drawString(400, 460, f"{nama}")
+
+    c.drawString(100, 430, "Ketua Program Studi,")
+    c.drawString(100, 400, "..............................")
+    c.drawString(100, 380, "NIP: ..............................")
+
+    # Footer Keterangan
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(100, 360, "Melampirkan:")
+    c.drawString(120, 345, "1. Kartu Mahasiswa")
+    c.drawString(120, 330, "2. Surat bebas tanggungan")
+
+    # Menyelesaikan PDF
+    c.save()
+    pdf_buffer.seek(0)
+    return pdf_buffer
+
+
+@app.route("/download-surat-permohonan", methods=["GET"])
+@token_required
+def download_surat_permohonan():
+    user = User.query.get(request.user_id)
+    nama = user.nama
+    nim = user.nim
+    prodi = user.prodi.nama
+    tahun_ajaran = TahunAjaran.query.filter_by(status=True).first().tahun
+    semester = Semester.query.filter_by(status=True).first().semester.value
+    alamat = "Jl. Raya Kampus, Bangkalan"
+
+
+    # Membuat PDF
+    pdf_buffer = generate_surat_permintaan(
+        nama, nim,  prodi, alamat, semester, tahun_ajaran
+    )
+
+    # Mengirimkan PDF sebagai file unduhan
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name="Surat_Permohonan_BSS.pdf",
+        mimetype="application/pdf",
+    )
 
 
 # Route untuk mengakses file

@@ -9,3 +9,4 @@ werkzeug
 pyjwt
 
 flask_mail
+reportlab

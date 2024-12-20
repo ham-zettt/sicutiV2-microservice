@@ -20,8 +20,9 @@
          }
       </script>
    </head>
-   <body class="bg-gray-100 text-gray-800">
-      <header class="bg-blue-600 text-white py-4">
+   <body class="text-gray-800">
+      <!-- Header -->
+      <header class="bg-blue-600 text-white py-4 px-5">
          <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-xl font-semibold">Sistem Pengajuan Cuti</h1>
             <button
@@ -33,7 +34,7 @@
          </div>
       </header>
 
-      <main class="container mx-auto py-8">
+      <main class="container mx-auto py-8 px-5">
          <div class="text-center mb-8">
             <h2 class="text-2xl font-bold mb-2">Selamat Datang, Mahasiswa</h2>
             <p class="text-gray-600">
@@ -42,7 +43,7 @@
             </p>
          </div>
 
-         <div class="flex justify-center">
+         <div class="flex justify-center mb-8">
             <a id="applyLink" href="/apply" class="inline-block">
                <button
                   id="applyButton"
@@ -56,21 +57,51 @@
             </p>
          </div>
 
-         <div class="bg-white shadow-md rounded-lg p-6 mt-6">
-            <h3 class="text-lg font-semibold mb-4 text-gray-800">
-               Status Pengajuan Cuti
-            </h3>
+         <!-- Status Pengajuan Cuti Table -->
+         <div class="bg-white rounded-lg p-6 mt-6">
+            <div class="div flex items-center justify-between">
+               <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                  Status Pengajuan Cuti
+               </h3>
+               <div class="flex justify-center mt-6">
+                  <a href="/download-surat-permohonan" class="inline-block">
+                     <button
+                        class="text-sm bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-blue-600 transition"
+                     >
+                        Download Surat Pengajuan Cuti
+                     </button>
+                  </a>
+               </div>
+            </div>
             <div class="overflow-x-auto">
-               <table class="min-w-full border border-gray-300 rounded-lg">
+               <table class="min-w-full table-auto border-collapse">
                   <thead>
-                     <tr class="bg-gray-50 text-gray-700">
-                        <th class="px-6 py-3 text-center border-b">ID</th>
-                        <th class="px-6 py-3 text-center border-b">Alasan</th>
-                        <th class="px-6 py-3 text-center border-b">
+                     <tr class="text-gray-700">
+                        <th
+                           class="px-6 py-3 text-center border-b-2 border-black"
+                        >
+                           No
+                        </th>
+                        <th
+                           class="px-6 py-3 text-center border-b-2 border-black"
+                        >
+                           Alasan
+                        </th>
+                        <th
+                           class="px-6 py-3 text-center border-b-2 border-black"
+                        >
                            Tahun Ajaran
                         </th>
-                        <th class="px-6 py-3 text-center border-b">Semester</th>
-                        <th class="px-6 py-3 text-center border-b">Status</th>
+                        <th
+                           class="px-6 py-3 text-center border-b-2 border-black"
+                        >
+                           Semester
+                        </th>
+                        <th
+                           class="px-6 py-3 text-center border-b-2 border-black"
+                        >
+                           Status
+                        </th>
                      </tr>
                   </thead>
                   <tbody id="statusTable" class="text-gray-600">
@@ -79,29 +110,39 @@
                </table>
             </div>
          </div>
+         <!-- Button untuk Download Surat Pengajuan -->
       </main>
    </body>
+
    <script>
       async function loadStatusTable() {
          const response = await fetch("/status");
          if (response.ok) {
             const data = await response.json();
-            const tableBody = document.getElementById("statusTable");
+            const tableBody = document.querySelector("tbody");
             tableBody.innerHTML = ""; // Clear existing rows
-            data.forEach((item) => {
+            data.forEach((item, index) => {
                const row = `<tr class="hover:bg-gray-100">
-            <td class="px-6 py-4 text-center border-b">${item.id}</td>
-            <td class="px-6 py-4 text-center border-b">${item.alasan}</td>
-            <td class="px-6 py-4 text-center border-b">${item.tahun_ajaran}</td>
-            <td class="px-6 py-4 text-center border-b">${item.semester}</td>
-            <td class="px-6 py-4 text-center border-b font-semibold ${
+            <td class="px-6 py-4 text-center border-b border-black">${
+               index + 1
+            }</td>
+            <td class="px-6 py-4 text-center border-b border-black">${
+               item.alasan
+            }</td>
+            <td class="px-6 py-4 text-center border-b border-black">${
+               item.tahun_ajaran
+            }</td>
+            <td class="px-6 py-4 text-center border-b border-black">${
+               item.semester
+            }</td>
+            <td class="px-6 py-4 text-center border-b border-black font-semibold ${
                item.status === "Disetujui"
                   ? "text-green-600"
                   : item.status === "Ditolak"
                   ? "text-red-600"
                   : "text-yellow-600"
             }">${item.status}</td>
-         </tr>`;
+            </tr>`;
                tableBody.insertAdjacentHTML("beforeend", row);
             });
          } else {
